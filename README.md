@@ -3,6 +3,7 @@ Configure several sets of Talkgroups and quickly switch between them.
 
 Only recomended for hotspots.
 
+This is a commandline application. ;-)
 ![grafik](https://github.com/noerrx/SetBrandMeisterSettingsToDevice/assets/42487986/e5704dcf-681f-41a2-a9b4-cb8374a39a93)
 
 ## Usage
@@ -113,7 +114,7 @@ The following properties can be configured:
 |`slot`|The slot where the talkgroup should be placed at. Choose `0` when you can only see one slot on the device-selfcare-page. |
 
 ## Running the app
-Start `SetBrandMeisterSettingsToDevice.exe`.
+Start `SetBrandMeisterSettingsToDevice.exe` within a Windows commandline.
 
 ## When the app does not start properly
 The following files must be in the same folder as `SetBrandMeisterSettingsToDevice.exe`:
