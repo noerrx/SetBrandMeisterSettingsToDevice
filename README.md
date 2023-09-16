@@ -5,7 +5,7 @@ Only recomended for hotspots.
 
 This is a commandline application. ;-)
 
-![grafik](https://github.com/noerrx/SetBrandMeisterSettingsToDevice/assets/42487986/e5704dcf-681f-41a2-a9b4-cb8374a39a93)
+![grafik](https://github.com/noerrx/SetBrandMeisterSettingsToDevice/assets/42487986/99ee8177-2521-4db5-a2e5-c1e574ab4443)
 
 ## Usage
 Prerequisites:
