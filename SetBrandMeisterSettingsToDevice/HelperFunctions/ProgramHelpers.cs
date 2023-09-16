@@ -89,5 +89,66 @@ namespace SetBrandMeisterSettingsToDevice.HelperFunctions
             }
             return "OFFLINE";
         }
+
+        public static void GetUserInputs(LoadedContents loadedContents, Dictionary<int, BmDevice> bmDevices, out BmDevice bmDeviceSelected, out Setting deviceSettingSelected)
+        {
+            ConsoleExt.WriteLine(string.Empty);
+            ConsoleExt.WriteLine("Which device?", Severity.Question);
+
+            int counter = 1;
+            foreach (var bmDevice in bmDevices.Values)
+            {
+                ConsoleExt.WriteLine($"\t[{counter}] {bmDevice.id} ({bmDevice.callsign}) - {ProgramHelpers.BMOnlineStatusToText(bmDevice.last_seen)}", Severity.None);
+                counter++;
+            }
+            ConsoleExt.Write("Enter the Index of the Device ([1]): ", Severity.Question);
+            string consoleInput = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(consoleInput))
+            {
+                consoleInput = 1.ToString();
+            }
+
+            int deviceNumber = int.Parse(consoleInput);
+
+            var localBrandMeisterDeviceSelected = bmDevices.Values.ToArray()[deviceNumber - 1];
+            Device deviceSelected = loadedContents.DeviceSettings.devices.Where(dev => dev.deviceId == localBrandMeisterDeviceSelected.id).First();
+
+            ConsoleExt.WriteLine("Which setting?", Severity.Question);
+
+            counter = 1;
+            foreach (var setting in deviceSelected.settings)
+            {
+                ConsoleExt.WriteLine($"\t[{counter}] {setting.name}", Severity.None);
+                counter++;
+            }
+            ConsoleExt.Write("Enter the Index of the Device ([1]): ", Severity.Question);
+            consoleInput = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(consoleInput))
+            {
+                consoleInput = 1.ToString();
+            }
+
+            int settingNumber = int.Parse(consoleInput);
+            deviceSettingSelected = deviceSelected.settings[settingNumber - 1];
+
+            bmDeviceSelected = localBrandMeisterDeviceSelected;
+        }
+
+        public static async Task<Dictionary<int, BmDevice>> LoadAllBrandMeisterDeviceInfos(LoadedContents loadedContents)
+        {
+            Dictionary<int, BmDevice> bmDevices = new Dictionary<int, BmDevice>();
+            ConsoleExt.WriteLine("Loading Brandmeister-Device-Infos");
+            foreach (var device in loadedContents.DeviceSettings.devices)
+            {
+                if (!bmDevices.ContainsKey(device.deviceId))
+                {
+                    bmDevices.Add(device.deviceId, await BrandMeisterWeb.GetDeviceToDeviceID(device.deviceId));
+                }
+            }
+            return bmDevices;
+        }
+
     }
 }
