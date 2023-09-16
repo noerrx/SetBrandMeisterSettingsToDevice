@@ -1,0 +1,18 @@
+{
+  "devices": [
+    {
+      "deviceId": NUMBER,
+      "settings": [
+        {
+          "name": "TEXT",
+          "talkgroups": [
+            {
+              "talkgroup": NUMBER,
+              "slot": NUMBER
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
