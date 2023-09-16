@@ -6,6 +6,11 @@ namespace SetBrandMeisterSettingsToDevice.HelperFunctions
     {
         public static void WriteLine(string text, Severity severity = Severity.Info, ConsoleColor? consoleColor = null)
         {
+            if (string.IsNullOrEmpty(text))
+            {
+                Console.WriteLine();
+                return;
+            }
             Write($"{text}\r\n", severity, consoleColor);
         }
 

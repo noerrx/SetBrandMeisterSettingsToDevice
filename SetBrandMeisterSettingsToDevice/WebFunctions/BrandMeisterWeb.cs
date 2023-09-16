@@ -70,7 +70,7 @@ namespace SetBrandMeisterSettingsToDevice.WebFunctions
 
         public static async Task<bool> AddTalkGroupToDevice(TalkGroupOfDevice talkGroup, BrandMeisterApiKeyInfo brandMeisterApiKeyInfo)
         {
-            ConsoleExt.Write($"Removing Talkgroup {talkGroup.talkgroup} at Slot {talkGroup.slot} from DeviceID {talkGroup.repeaterid}... ");
+            ConsoleExt.Write($"Adding Talkgroup {talkGroup.talkgroup} at Slot {talkGroup.slot} from DeviceID {talkGroup.repeaterid}... ");
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", brandMeisterApiKeyInfo.apiKey);
@@ -97,11 +97,45 @@ namespace SetBrandMeisterSettingsToDevice.WebFunctions
 
         public static async Task<bool> RemoveTalkGroupFromDevice(TalkGroupOfDevice talkGroup, BrandMeisterApiKeyInfo brandMeisterApiKeyInfo)
         {
-            ConsoleExt.Write($"Adding Talkgroup {talkGroup.talkgroup} at Slot {talkGroup.slot} to DeviceID {talkGroup.repeaterid}... ");
+            ConsoleExt.Write($"Removing Talkgroup {talkGroup.talkgroup} at Slot {talkGroup.slot} to DeviceID {talkGroup.repeaterid}... ");
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", brandMeisterApiKeyInfo.apiKey);
                 var response = await client.DeleteAsync($"{brandMeisterUrl}/device/{talkGroup.repeaterid}/talkgroup/{talkGroup.slot}/{talkGroup.talkgroup}");
+                if (response.IsSuccessStatusCode)
+                {
+                    ConsoleExt.WriteLine("Done", Severity.Info, ConsoleColor.Green);
+                    return true;
+                }
+                ConsoleExt.WriteLine($"Failed! {response.StatusCode}", Severity.Error, ConsoleColor.Red);
+                ConsoleExt.WriteLine(response.ReasonPhrase);
+            }
+            return false;
+        }
+        public static async Task<bool> DropCallRoute(int deviceId, int slot, BrandMeisterApiKeyInfo brandMeisterApiKeyInfo)
+        {
+            ConsoleExt.Write($"Dropping all Calls on Device {deviceId} at slot {slot}... ");
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", brandMeisterApiKeyInfo.apiKey);
+                var response = await client.GetAsync($"{brandMeisterUrl}/device/{deviceId}/action/dropCallRoute/{slot}");
+                if (response.IsSuccessStatusCode)
+                {
+                    ConsoleExt.WriteLine("Done", Severity.Info, ConsoleColor.Green);
+                    return true;
+                }
+                ConsoleExt.WriteLine($"Failed! {response.StatusCode}", Severity.Error, ConsoleColor.Red);
+                ConsoleExt.WriteLine(response.ReasonPhrase);
+            }
+            return false;
+        }
+        public static async Task<bool> DropDynamicGroups(int deviceId, int slot, BrandMeisterApiKeyInfo brandMeisterApiKeyInfo)
+        {
+            ConsoleExt.Write($"Dropping all dynamic calls on Device {deviceId} at slot {slot}... ");
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", brandMeisterApiKeyInfo.apiKey);
+                var response = await client.GetAsync($"{brandMeisterUrl}/device/{deviceId}/action/dropDynamicGroups/{slot}");
                 if (response.IsSuccessStatusCode)
                 {
                     ConsoleExt.WriteLine("Done", Severity.Info, ConsoleColor.Green);

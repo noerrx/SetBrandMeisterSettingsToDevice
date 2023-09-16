@@ -1,7 +1,6 @@
 ﻿using SetBrandMeisterSettingsToDevice.DataElements;
 using SetBrandMeisterSettingsToDevice.HelperFunctions;
 using SetBrandMeisterSettingsToDevice.WebFunctions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,74 +9,34 @@ namespace SetBrandMeisterSettingsToDevice
 {
     internal class Program
     {
-        private static readonly Dictionary<int, BmDevice> bmDevices = new Dictionary<int, BmDevice>();
         static async Task Main()
         {
+
+
             LoadedContents loadedContents = await ProgramHelpers.LoadFileContentAsync();
+
             if (!loadedContents.Success) { return; }
 
-            ConsoleExt.WriteLine("Loading Brandmeister-Device-Infos");
-            foreach (var device in loadedContents.DeviceSettings.devices)
-            {
-                if (!bmDevices.ContainsKey(device.deviceId))
-                {
-                    bmDevices.Add(device.deviceId, await BrandMeisterWeb.GetDeviceToDeviceID(device.deviceId));
-                }
-            }
+            Dictionary<int, BmDevice> bmDevices = await ProgramHelpers.LoadAllBrandMeisterDeviceInfos(loadedContents);
 
-            ConsoleExt.WriteLine("Which device?", Severity.Question);
+            BmDevice bmDeviceSelected;
+            Setting deviceSettingSelected;
 
-            int counter = 1;
-            foreach (var bmDevice in bmDevices.Values)
-            {
-                ConsoleExt.WriteLine($"\t[{counter}] {bmDevice.id} ({bmDevice.callsign}) - {ProgramHelpers.BMOnlineStatusToText(bmDevice.last_seen)}", Severity.None);
-                counter++;
-            }
-            ConsoleExt.Write("Eingabe ([1]): ");
-            string consoleInput = Console.ReadLine();
-
-            if (string.IsNullOrEmpty(consoleInput))
-            {
-                consoleInput = 1.ToString();
-            }
-
-            int deviceNumber = int.Parse(consoleInput);
-
-            BmDevice bmDeviceSelected = bmDevices.Values.ToArray()[deviceNumber - 1];
-            Device deviceSelected = loadedContents.DeviceSettings.devices.Where(dev => dev.deviceId == bmDeviceSelected.id).First();
-
-            ConsoleExt.WriteLine("Which setting?", Severity.Question);
-
-            counter = 1;
-            foreach (var setting in deviceSelected.settings)
-            {
-                ConsoleExt.WriteLine($"\t[{counter}] {setting.name}", Severity.None);
-                counter++;
-            }
-            ConsoleExt.Write("Eingabe ([1]): ");
-            consoleInput = Console.ReadLine();
-
-            if (string.IsNullOrEmpty(consoleInput))
-            {
-                consoleInput = 1.ToString();
-            }
-
-            int settingNumber = int.Parse(consoleInput);
-            Setting deviceSettingSelected = deviceSelected.settings[settingNumber - 1];
+            ProgramHelpers.GetUserInputs(loadedContents, bmDevices, out bmDeviceSelected, out deviceSettingSelected);
 
             ConsoleExt.WriteLine($"Applying Setting \"{deviceSettingSelected.name}\" to Device \"{bmDeviceSelected.id} ({bmDeviceSelected.callsign}) - {ProgramHelpers.BMOnlineStatusToText(bmDeviceSelected.last_seen)}\"");
 
             List<TalkGroupOfDevice> talkGroupsOfDevice = await BrandMeisterWeb.GetTalkGroupsToDeviceID(bmDeviceSelected.id);
-
             List<TalkGroupOfDevice> deltaToRemove = ProgramHelpers.GetDeltaOfTalkGroupsToRemove(talkGroupsOfDevice, deviceSettingSelected.talkgroups);
             List<TalkGroupOfDevice> deltaToAdd = ProgramHelpers.GetDeltaOfTalkGroupsToAdd(talkGroupsOfDevice, deviceSettingSelected.talkgroups, bmDeviceSelected.id);
+            List<int> slotsToDrop = deviceSettingSelected.talkgroups.Select(tg => tg.slot).Distinct().ToList();
 
             ConsoleExt.WriteLine($"Removing {deltaToRemove.Count} Talkgroups");
             foreach (var talkGroup in deltaToRemove)
             {
                 if (!await BrandMeisterWeb.RemoveTalkGroupFromDevice(talkGroup, loadedContents.BrandMeisterApiKeyInfo))
                 {
-                    ConsoleExt.WriteLine($"Fehler beim Löschen von {talkGroup.talkgroup} auf {talkGroup.repeaterid}, Slot {talkGroup.slot}. Breche ab.");
+                    ConsoleExt.WriteLine($"Error while removing talkgroup {talkGroup.talkgroup} at {talkGroup.repeaterid}, slot {talkGroup.slot}. Stoping.", Severity.Error);
                     return;
                 }
             }
@@ -87,10 +46,28 @@ namespace SetBrandMeisterSettingsToDevice
             {
                 if (!await BrandMeisterWeb.AddTalkGroupToDevice(talkGroup, loadedContents.BrandMeisterApiKeyInfo))
                 {
-                    ConsoleExt.WriteLine($"Fehler beim Hinzufügen von {talkGroup.talkgroup} auf {talkGroup.repeaterid}, Slot {talkGroup.slot}. Breche ab.");
+                    ConsoleExt.WriteLine($"Error while adding talkgroup {talkGroup.talkgroup} at {talkGroup.repeaterid}, slot {talkGroup.slot}. Stoping.", Severity.Error);
                     return;
                 }
             }
+            ConsoleExt.WriteLine($"Dropping all calls on all slots.");
+            foreach (var slot in slotsToDrop)
+            {
+                if (!await BrandMeisterWeb.DropCallRoute(bmDeviceSelected.id, slot, loadedContents.BrandMeisterApiKeyInfo))
+                {
+                    ConsoleExt.WriteLine($"Error while dropping call on slot {slot} at {bmDeviceSelected.id}. Stopping.", Severity.Error);
+                    return;
+                }
+                if (!await BrandMeisterWeb.DropDynamicGroups(bmDeviceSelected.id, slot, loadedContents.BrandMeisterApiKeyInfo))
+                {
+                    ConsoleExt.WriteLine($"Error while dropping dynamic groups on slot {slot} at {bmDeviceSelected.id}. Stopping.", Severity.Error);
+                    return;
+                }
+            }
+            ConsoleExt.WriteLine(string.Empty);
+            ConsoleExt.WriteLine("You may have to drop static links calling TG 4000 on your DMR-Radio.");
+            ConsoleExt.WriteLine(string.Empty);
+            ConsoleExt.WriteLine("All done. Have a nice day, 73");
         }
     }
 }
