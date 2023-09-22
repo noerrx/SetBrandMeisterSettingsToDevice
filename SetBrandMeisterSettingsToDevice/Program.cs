@@ -9,7 +9,7 @@ namespace SetBrandMeisterSettingsToDevice
 {
     internal class Program
     {
-        static async Task Main()
+        static async Task Main(string[] args)
         {
 
 
@@ -22,7 +22,7 @@ namespace SetBrandMeisterSettingsToDevice
             BmDevice bmDeviceSelected;
             Setting deviceSettingSelected;
 
-            ProgramHelpers.GetUserInputs(loadedContents, bmDevices, out bmDeviceSelected, out deviceSettingSelected);
+            ProgramHelpers.GetUserInputs(loadedContents, bmDevices, out bmDeviceSelected, out deviceSettingSelected, args);
 
             ConsoleExt.WriteLine($"Applying Setting \"{deviceSettingSelected.name}\" to Device \"{bmDeviceSelected.id} ({bmDeviceSelected.callsign}) - {ProgramHelpers.BMOnlineStatusToText(bmDeviceSelected.last_seen)}\"");
 

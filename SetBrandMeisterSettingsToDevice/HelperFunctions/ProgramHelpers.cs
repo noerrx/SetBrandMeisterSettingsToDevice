@@ -90,7 +90,7 @@ namespace SetBrandMeisterSettingsToDevice.HelperFunctions
             return "OFFLINE";
         }
 
-        public static void GetUserInputs(LoadedContents loadedContents, Dictionary<int, BmDevice> bmDevices, out BmDevice bmDeviceSelected, out Setting deviceSettingSelected)
+        public static void GetUserInputs(LoadedContents loadedContents, Dictionary<int, BmDevice> bmDevices, out BmDevice bmDeviceSelected, out Setting deviceSettingSelected, string[] args)
         {
             ConsoleExt.WriteLine(string.Empty);
             ConsoleExt.WriteLine("Which device?", Severity.Question);
@@ -102,7 +102,17 @@ namespace SetBrandMeisterSettingsToDevice.HelperFunctions
                 counter++;
             }
             ConsoleExt.Write("Enter the Index of the Device ([1]): ", Severity.Question);
-            string consoleInput = Console.ReadLine();
+            string consoleInput = null;
+
+            if (args.Length >= 1)
+            {
+                consoleInput = args[0];
+                Console.WriteLine(consoleInput);
+            }
+            else
+            {
+                consoleInput = Console.ReadLine();
+            }
 
             if (string.IsNullOrEmpty(consoleInput))
             {
@@ -123,7 +133,15 @@ namespace SetBrandMeisterSettingsToDevice.HelperFunctions
                 counter++;
             }
             ConsoleExt.Write("Enter the Index of the Device ([1]): ", Severity.Question);
-            consoleInput = Console.ReadLine();
+            if (args.Length >= 2)
+            {
+                consoleInput = args[1];
+                Console.WriteLine(consoleInput);
+            }
+            else
+            {
+                consoleInput = Console.ReadLine();
+            }
 
             if (string.IsNullOrEmpty(consoleInput))
             {
